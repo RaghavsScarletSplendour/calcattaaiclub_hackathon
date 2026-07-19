@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
   // Upload first, independent of extraction outcome — the photo is worth
   // keeping even if the vision model can't read it.
-  const filePath = await uploadToStorage(bytes, mimeType, file.name);
+  const filePath = await uploadToStorage(bytes, mimeType);
 
   const result = await extractFromImage(base64, mimeType);
   if (!result.ok) {
@@ -26,10 +26,22 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true, data: result.data, filePath });
 }
 
-async function uploadToStorage(bytes: Buffer, mimeType: string, originalName: string): Promise<string | null> {
+// Client-controlled inputs (filename, mimeType) never reach the storage key —
+// only a fresh UUID plus an extension from this fixed allowlist.
+const EXTENSION_BY_MIME: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/heic": "heic",
+  "image/heif": "heif",
+};
+
+async function uploadToStorage(bytes: Buffer, mimeType: string): Promise<string | null> {
   try {
     const sb = createServiceClient();
-    const path = `${randomUUID()}-${originalName}`;
+    const ext = EXTENSION_BY_MIME[mimeType];
+    const path = ext ? `${randomUUID()}.${ext}` : randomUUID();
     const { error } = await sb.storage.from("documents").upload(path, bytes, { contentType: mimeType });
     if (error) {
       console.error("storage upload failed:", error.message);

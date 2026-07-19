@@ -6,9 +6,9 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { deriveReminder } from "@/lib/reminders";
 import type { ExtractionResult } from "@/lib/openai";
 
-// Matches the "<uuid>-<original filename>" scheme /api/extract generates —
+// Matches the "<uuid>" or "<uuid>.<ext>" scheme /api/extract generates —
 // rejects arbitrary client-supplied strings before they're linked in as file_url.
-const FILE_PATH_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-.+$/i;
+const FILE_PATH_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\.[a-z0-9]+)?$/i;
 
 /** Only trust file_path if it looks like our own upload naming and the object actually exists. */
 async function resolveFilePath(filePath: string | null): Promise<string | null> {
