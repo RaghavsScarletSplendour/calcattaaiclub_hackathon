@@ -167,7 +167,7 @@ function ContactCard({ contact }: { contact: Contact }) {
       </div>
       {contact.phone && (
         <a
-          href={`tel:${contact.phone}`}
+          href={`tel:${contact.phone.replace(/\s+/g, "")}`}
           className="mt-4 block rounded-xl bg-primary py-2.75 text-center text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           Call {contact.phone}
