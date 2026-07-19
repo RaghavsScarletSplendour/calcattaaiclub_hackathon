@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -20,9 +21,7 @@ export function Sidebar({ people }: { people: Person[] }) {
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4.5 py-6.5">
       <Link href="/" className="mb-8 flex items-center gap-2.5 px-2">
-        <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[9px] bg-primary text-sm font-bold text-primary-foreground">
-          H
-        </div>
+        <Image src="/logo-mark.png" alt="" width={30} height={30} className="h-7.5 w-7.5 rounded-[9px]" />
         <span className="text-[17px] font-semibold tracking-tight text-sidebar-foreground">Homie</span>
       </Link>
 
