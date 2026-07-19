@@ -21,6 +21,7 @@ export function AddFlow({ people }: { people: Person[] }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [form, setForm] = useState<ExtractionResult | null>(null);
   const [personId, setPersonId] = useState<string | null>(null);
+  const [filePath, setFilePath] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -32,6 +33,7 @@ export function AddFlow({ people }: { people: Person[] }) {
       fd.append("file", file);
       const res = await fetch("/api/extract", { method: "POST", body: fd });
       const json = await res.json();
+      setFilePath(json.filePath ?? null);
       if (!json.ok) {
         setErrorMsg(`Couldn't read that document (${json.reason}). Try another photo, or fill it in manually below.`);
         setForm(blankExtraction());
@@ -56,7 +58,7 @@ export function AddFlow({ people }: { people: Person[] }) {
     setStage("saving");
     startTransition(async () => {
       try {
-        await ingestDocument({ ...form, person_id: personId });
+        await ingestDocument({ ...form, person_id: personId, file_path: filePath });
         toast.success("Saved — added to the action feed");
         router.push("/");
       } catch (e) {

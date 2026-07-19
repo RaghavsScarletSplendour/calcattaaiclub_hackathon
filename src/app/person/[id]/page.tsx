@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { formatDate, formatINR } from "@/lib/format";
 import {
   PersonProfile,
@@ -59,12 +60,14 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
     };
   });
 
-  const identityDocs: IdentityDocItem[] = (identityDocRows ?? []).map((d) => ({
-    id: d.id,
-    label: identityDocLabel(d),
-    meta: identityDocMeta(d),
-    fileUrl: d.file_url,
-  }));
+  const identityDocs: IdentityDocItem[] = await Promise.all(
+    (identityDocRows ?? []).map(async (d) => ({
+      id: d.id,
+      label: identityDocLabel(d),
+      meta: identityDocMeta(d),
+      fileUrl: await signedUrl(d.file_url),
+    }))
+  );
 
   const assetMap = new Map((assets ?? []).map((a) => [a.id, a.name]));
   const reminders: PersonReminderItem[] = (reminderRows ?? []).map((r) => ({
@@ -84,6 +87,19 @@ export default async function PersonPage({ params }: { params: Promise<{ id: str
       }}
     />
   );
+}
+
+// file_url holds a storage object path, not a public URL — the "documents"
+// bucket is private, so resolve a short-lived signed URL per request.
+async function signedUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const sb = createServiceClient();
+  const { data, error } = await sb.storage.from("documents").createSignedUrl(path, 3600);
+  if (error) {
+    console.error("signed url failed:", error.message);
+    return null;
+  }
+  return data.signedUrl;
 }
 
 function identityDocLabel(doc: Doc): string {
