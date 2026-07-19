@@ -21,9 +21,9 @@ export function Sidebar({ people }: { people: Person[] }) {
     <aside className="flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4.5 py-6.5">
       <Link href="/" className="mb-8 flex items-center gap-2.5 px-2">
         <div className="flex h-7.5 w-7.5 items-center justify-center rounded-[9px] bg-primary text-sm font-bold text-primary-foreground">
-          F
+          H
         </div>
-        <span className="text-[17px] font-semibold tracking-tight text-sidebar-foreground">Family OS</span>
+        <span className="text-[17px] font-semibold tracking-tight text-sidebar-foreground">Homie</span>
       </Link>
 
       <nav className="flex flex-col gap-0.5">

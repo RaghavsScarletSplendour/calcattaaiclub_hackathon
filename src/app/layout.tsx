@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Family OS",
+  title: "Homie",
   description:
     "A COO for your household — upload any document, it files itself and surfaces what matters next.",
 };
