@@ -2,8 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { deriveReminder } from "@/lib/reminders";
 import type { ExtractionResult } from "@/lib/openai";
+
+// Matches the "<uuid>-<original filename>" scheme /api/extract generates —
+// rejects arbitrary client-supplied strings before they're linked in as file_url.
+const FILE_PATH_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-.+$/i;
+
+/** Only trust file_path if it looks like our own upload naming and the object actually exists. */
+async function resolveFilePath(filePath: string | null): Promise<string | null> {
+  if (!filePath || !FILE_PATH_PATTERN.test(filePath)) return null;
+  const sb = createServiceClient();
+  const { error } = await sb.storage.from("documents").createSignedUrl(filePath, 60);
+  return error ? null : filePath;
+}
 
 export type IngestPayload = ExtractionResult & {
   person_id: string | null; // resolved by the confirm screen (person_hint match or manual pick)
@@ -12,6 +25,7 @@ export type IngestPayload = ExtractionResult & {
 
 export async function ingestDocument(payload: IngestPayload) {
   const sb = await createClient();
+  const filePath = await resolveFilePath(payload.file_path);
 
   // 1. asset (only when extraction identified a physical asset)
   let assetId: string | null = null;
@@ -42,7 +56,7 @@ export async function ingestDocument(payload: IngestPayload) {
       asset_id: assetId,
       owner_id: payload.person_id,
       doc_type: payload.doc_type,
-      file_url: payload.file_path,
+      file_url: filePath,
       issue_date: payload.purchase_date,
       expiry_date: payload.expiry_date,
       amount: payload.amount,
