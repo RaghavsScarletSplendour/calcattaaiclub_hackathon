@@ -12,34 +12,38 @@ export function formatDate(d: string | null | undefined): string {
   return format(parseISO(d), "dd/MM/yyyy");
 }
 
-export type Urgency = "red" | "amber" | "green";
+export type Urgency = "red" | "amber" | "neutral";
 
 /** Calendar days from today to `due` (negative = overdue). */
 export function daysUntil(due: string): number {
   return differenceInCalendarDays(parseISO(due), new Date());
 }
 
-/** PRD §7: red < 7 days, amber < 30, else green. */
+/** Matches the approved design's decorate(): red < 7 days, amber < 30, else neutral. */
 export function urgency(due: string): Urgency {
   const d = daysUntil(due);
   if (d < 7) return "red";
   if (d < 30) return "amber";
-  return "green";
+  return "neutral";
 }
 
 export function dueLabel(due: string): string {
   const d = daysUntil(due);
-  if (d < 0) return `${Math.abs(d)}d overdue`;
+  if (d < 0) return "Overdue";
   if (d === 0) return "Due today";
-  if (d === 1) return "Due tomorrow";
-  return `in ${d} days`;
+  return `${d} day${d === 1 ? "" : "s"}`;
 }
 
-/** Tailwind classes per urgency band (light + dark). */
-export const URGENCY_CLASSES: Record<Urgency, string> = {
-  red: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900",
-  amber:
-    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900",
-  green:
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900",
+/** Small status-dot color per urgency band. */
+export const URGENCY_DOT: Record<Urgency, string> = {
+  red: "#ff3b30",
+  amber: "#ff9500",
+  neutral: "#c7c7cc",
+};
+
+/** Days-remaining text color per urgency band. */
+export const URGENCY_TEXT: Record<Urgency, string> = {
+  red: "#ff3b30",
+  amber: "#ff9500",
+  neutral: "#6e6e73",
 };
