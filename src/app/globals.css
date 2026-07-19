@@ -50,6 +50,7 @@
 
 :root {
   /* Family OS — "Command Feed" design (familyos-logo-and-prd/project/FamilyOS.dc.html) */
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --background: #e7e7ea;
   --foreground: #1d1d1f;
   --card: #ffffff;
