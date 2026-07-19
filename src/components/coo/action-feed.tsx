@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { formatINR, urgency, dueLabel, URGENCY_DOT, URGENCY_TEXT } from "@/lib/format";
 import type { FeedItem } from "@/lib/coo";
+import { markReminderDone } from "@/app/actions/reminders";
 
 type Person = { id: string; name: string; initial: string | null; color: string | null };
 
@@ -17,8 +18,19 @@ export function ActionFeed({
   peopleMap: Map<string, Person>;
 }) {
   const [filter, setFilter] = useState<string | null>(null);
+  const router = useRouter();
   const visible = filter ? items.filter((i) => i.person_id === filter) : items;
   const [hero, ...rest] = visible;
+
+  async function handleMarkDone(e: React.MouseEvent, reminderId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await markReminderDone(reminderId);
+    } catch (err) {
+      console.error("Failed to mark reminder done", err);
+    }
+  }
 
   return (
     <div>
@@ -48,8 +60,13 @@ export function ActionFeed({
         )}
 
         {hero && (
-          <Link
-            href={itemHref(hero)}
+          <div
+            role="link"
+            tabIndex={0}
+            onClick={() => router.push(itemHref(hero))}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") router.push(itemHref(hero));
+            }}
             className="mb-6.5 flex cursor-pointer items-center gap-5.5 rounded-[20px] border border-primary/30 bg-accent p-6 shadow-[0_10px_34px_rgba(94,92,230,0.16)] transition-shadow hover:shadow-[0_14px_40px_rgba(94,92,230,0.24)]"
           >
             <Avatar person={hero.person_id ? peopleMap.get(hero.person_id) : undefined} size={52} fontSize={22} />
@@ -70,8 +87,15 @@ export function ActionFeed({
                 {dueLabel(hero.due_date)}
               </div>
               {hero.amount != null && <div className="mt-1 text-[15px] text-muted-foreground">{formatINR(hero.amount)}</div>}
+              <button
+                type="button"
+                onClick={(e) => handleMarkDone(e, hero.id)}
+                className="mt-2 rounded-full border border-primary/30 bg-background px-3 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+              >
+                Mark done
+              </button>
             </div>
-          </Link>
+          </div>
         )}
 
         {rest.length > 0 && (
@@ -86,10 +110,15 @@ export function ActionFeed({
               {rest.map((item) => {
                 const band = urgency(item.due_date);
                 return (
-                  <Link
+                  <div
                     key={item.id}
-                    href={itemHref(item)}
-                    className="flex items-center gap-4 rounded-[16px] border border-border bg-card p-4 transition-colors hover:border-foreground/15 hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)]"
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(itemHref(item))}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") router.push(itemHref(item));
+                    }}
+                    className="flex cursor-pointer items-center gap-4 rounded-[16px] border border-border bg-card p-4 transition-colors hover:border-foreground/15 hover:shadow-[0_4px_14px_rgba(0,0,0,0.05)]"
                   >
                     <span
                       className="h-2.5 w-2.5 flex-shrink-0 rounded-[5px]"
@@ -110,7 +139,14 @@ export function ActionFeed({
                         {item.amount != null ? formatINR(item.amount) : item.type}
                       </div>
                     </div>
-                  </Link>
+                    <button
+                      type="button"
+                      onClick={(e) => handleMarkDone(e, item.id)}
+                      className="flex-shrink-0 rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted"
+                    >
+                      Mark done
+                    </button>
+                  </div>
                 );
               })}
             </div>
