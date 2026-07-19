@@ -7,6 +7,7 @@ import type { ExtractionResult } from "@/lib/openai";
 
 export type IngestPayload = ExtractionResult & {
   person_id: string | null; // resolved by the confirm screen (person_hint match or manual pick)
+  file_path: string | null; // storage object path from /api/extract, or null if upload failed
 };
 
 export async function ingestDocument(payload: IngestPayload) {
@@ -41,6 +42,7 @@ export async function ingestDocument(payload: IngestPayload) {
       asset_id: assetId,
       owner_id: payload.person_id,
       doc_type: payload.doc_type,
+      file_url: payload.file_path,
       issue_date: payload.purchase_date,
       expiry_date: payload.expiry_date,
       amount: payload.amount,

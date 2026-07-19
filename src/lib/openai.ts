@@ -55,7 +55,9 @@ export type ExtractOutcome =
 
 /** base64 (no data-url prefix) + mime -> structured extraction, or a refusal/error reason. */
 export async function extractFromImage(base64: string, mimeType: string): Promise<ExtractOutcome> {
-  const response = await client.responses.create({
+  let response;
+  try {
+    response = await client.responses.create({
     model: "gpt-5.6-terra",
     input: [
       {
@@ -71,15 +73,19 @@ export async function extractFromImage(base64: string, mimeType: string): Promis
         ],
       },
     ],
-    text: {
-      format: {
-        type: "json_schema",
-        name: "document_extraction",
-        strict: true,
-        schema: EXTRACTION_SCHEMA,
+      text: {
+        format: {
+          type: "json_schema",
+          name: "document_extraction",
+          strict: true,
+          schema: EXTRACTION_SCHEMA,
+        },
       },
-    },
-  });
+    });
+  } catch (e) {
+    console.error("extractFromImage: OpenAI request failed:", e);
+    return { ok: false, reason: "api_error" };
+  }
 
   const message = response.output.find((item) => item.type === "message") as
     | { type: "message"; content: Array<{ type: string; text?: string; refusal?: string }> }
